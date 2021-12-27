@@ -1,4 +1,4 @@
-# (Lua) Parangon Reforged
+# (Lua) Parangon Reforged - Under development
 
 
 ### English
