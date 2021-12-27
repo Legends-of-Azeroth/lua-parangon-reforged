@@ -1,14 +1,7 @@
 local parangon = {
 
-  settings = {
-    level_difference = 3,
-    experience_amount = {pve = 10, pvp = 100},
-
-    message_give_xp = true,
-    message_level_up = true,
-
-    difference_pve_pvp = false,
-  }
+  config = require("parangon_config"),
+  locale = require("parangon_locale"),
 
   stats = {
 
@@ -88,7 +81,7 @@ function Player:SetParangonXP(amount)
   local oldxp = parangon.account[self:GetAccountId()].exp
   self:SetInformations(1, {exp = oldxp + amount})
 
-  if (parangon.settings.message_give_xp) then
+  if (parangon.config.message_give_xp) then
     self:SendNotification("Vous venez de recevoir "..amount.." points d'expérience Parangon.")
   end
 end
@@ -97,7 +90,7 @@ function Player:SetParangonLevel(amount)
   local oldlevel = parangon.account[self:GetAccountId()].level
   self:SetInformations(1, {level = level + amount})
 
-  if (parangon.settings.message_level_up) then
+  if (parangon.config.message_level_up) then
     self:SendNotification("Vous venez de monter de "..amount.." niveau supplémentaire de Parangon.")
   end
 end
@@ -113,17 +106,17 @@ function ParangonOnKill(event, player, victim)
   local pLevel = self:GetLevel()
   local vLevel = victim:GetLevel()
 
-  if (pLevel - vLevel <= parangon.settings.level_difference) or (vLevel - pLevel <= parangon.settings.level_difference) then
-    if (parangon.settings.difference_pve_pvp) then
+  if (pLevel - vLevel <= parangon.config.level_difference) or (vLevel - pLevel <= parangon.config.level_difference) then
+    if (parangon.config.difference_pve_pvp) then
       local oType = victim:GetTypeId()
 
       if (oType == 3) then
-        self:SetParangonXP(parangon.settings.experience_amount.pve)
+        self:SetParangonXP(parangon.config.experience_amount.pve)
       elseif (oType == 4) then
-        self:SetParangonXP(parangon.settings.experience_amount.pvp)
+        self:SetParangonXP(parangon.config.experience_amount.pvp)
       end
     else
-      self:SetParangonXP(parangon.settings.experience_amount.pve)
+      self:SetParangonXP(parangon.config.experience_amount.pve)
     end
   end
 end
