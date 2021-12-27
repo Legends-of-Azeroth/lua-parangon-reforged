@@ -4,7 +4,7 @@ local parangon = {
   locale = require("parangon_locale"),
 
   stats = {
-
+    7464, 7471, 7477, 7468
   }
 }
 parangon.account = {}
@@ -17,13 +17,13 @@ function Player:SetInformations(type, info)
     local accId = self:GetAccountId()
 
     for key, data in pairs(info) do
-      parangon.account[accId]["" .. key .. ""] = data
+      parangon.account[accId][key] = data
     end
 
   -- Character Informations
   elseif (type == 2) then
     for key, data in pairs(info) do
-      self:SetData("" .. key .. "", data)
+      self:SetData(key, data)
     end
   else
     return false
@@ -53,11 +53,13 @@ function Player:GetCharacterParangon()
   if (getCharInfo) then
     repeat
       self:SetInformations(2, {["parangon_stat_"..getCharInfo:GetUInt32(0)] = getCharInfo:GetUInt32(1)})
-    until getCharInfo:NextRow()
+      self:SetParangonStat(getCharInfo:GetUInt32(0), getCharInfo:GetUInt32(1))
+    until not getCharInfo:NextRow()
   else
     for _, statId in pairs(parangon.stats) do
       self:SetInformations(2, {["parangon_stat_"..statId] = 0})
       AuthDBExecute("INSERT INTO R1_Eluna.characters_parangon VALUES ("..pGuid..", "..statId..", 0)")
+      print('ok')
     end
   end
 end
@@ -71,9 +73,10 @@ end
 
 function Player:SetCharacterParangon()
   local pGuid = self:GetGUIDLow()
+
   for _, statId in pairs(parangon.stats) do
     local data = self:GetData("parangon_stat_"..statId)
-    CharDBExecute("UPDATE R1_Eluna.characters_parangon SET stat_id = "..statId..", stat_val = "..data.." WHERE guid = "..pGuid)
+    CharDBExecute("REPLACE INTO R1_Eluna.characters_parangon (guid, stat_id, stat_val) VALUES ("..pGuid..", "..statId..", "..data..")")
   end
 end
 
@@ -115,19 +118,23 @@ function Player:SetParangonLevel(amount)
   end
 end
 
-function Player:SetParangonStat(stat_id, stat_val)
-  local pGuid = player:GetGUIDLow()
-  local pAura = player:HasAura(stat_id)
+function Player:SetParangonStat(stat_id, stat_val, amount)
+  local pGuid = self:GetGUIDLow()
+  local pAura = self:HasAura(stat_id)
+
+  if (not amount) then
+    amount = 0
+  end
 
   local data = self:GetData("parangon_stat_"..stat_id)
-  local new_val = data + stat_val
+  local new_val = stat_val + amount
 
   self:SetInformations(2, {["parangon_stat_"..stat_id] = new_val})
 
   if (pAura) then
     self:RemoveAura(stat_id)
   end
-  self:AddAura(stat_id):SetStackAmount(new_val)
+  self:AddAura(stat_id, self):SetStackAmount(new_val)
 end
 
 function ParangonOnKill(event, player, victim)
@@ -178,3 +185,6 @@ for i = 6, 7 do
     ParangonOnKill(event, player, victim)
   end)
 end
+
+
+return parangon
